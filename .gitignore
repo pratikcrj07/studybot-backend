@@ -3,8 +3,14 @@ target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+.bot.env
+src/main/resources/application-prod.properties
 
-/src/main/resources/application.properties
+/src/main/resources/application.properties.template
+/bot.env        -> local, DO NOT commit
+/application.properties.template -> commit, safe
+/application.prod.properties -> ignore
+/application.properties -> generated via placeholders from bot.env, ignore
 
 ### STS ###
 .apt_generated
