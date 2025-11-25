@@ -108,11 +108,3 @@ This project is open-source. Feel free to use and modify it under [MIT License] 
 * Add Docker support for easier deployment
 * Add unit/integration tests for endpoints
 * Add logging and monitoring for production readiness
-
----
-
-This README keeps it simple, professional, and user-friendly for any developer who opens your repo.
-
----
-
-If you want, I can **also create a compact version with badges, links, and instructions tailored for GitHub’s visual appeal**, which looks really professional. Do you want me to do that?
