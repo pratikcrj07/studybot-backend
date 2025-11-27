@@ -3,31 +3,33 @@ package com.example.studybot.Service;
 import com.example.studybot.Repository.UserRepository;
 import com.example.studybot.config.JwtUtil;
 import com.example.studybot.model.User;
-import jakarta.mail.MessagingException; // Required for handling email errors
-import jakarta.mail.internet.MimeMessage;
-import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JavaMailSender mailSender;
     private final JwtUtil jwtUtil;
+    private final RestTemplate restTemplate;
+
+    @Value("${BREVO_API_KEY}")
+    private String brevoApiKey;
 
     public UserService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
-                       JavaMailSender mailSender,
-                       JwtUtil jwtUtil) {
+                       JwtUtil jwtUtil,
+                       RestTemplate restTemplate) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.mailSender = mailSender;
         this.jwtUtil = jwtUtil;
+        this.restTemplate = restTemplate;
     }
 
     public User registerUser(User user) {
@@ -42,7 +44,7 @@ public class UserService {
 
         User savedUser = userRepository.save(user);
 
-        // Call the new HTML email method
+        // Send OTP using Brevo API
         sendOtpEmail(savedUser);
 
         return savedUser;
@@ -52,40 +54,34 @@ public class UserService {
         return String.valueOf(100000 + (int)(Math.random() * 900000));
     }
 
-    // --- THIS IS THE UPDATED METHOD ---
     private void sendOtpEmail(User user) {
+        String url = "https://api.brevo.com/v3/smtp/email";
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("sender", Map.of("name", "Studybot", "email", "your@brevo.com"));
+        body.put("to", List.of(Map.of("email", user.getEmail())));
+        body.put("subject", "StudyBot OTP Verification");
+        body.put("htmlContent", String.format(
+                "<html><body style='font-family: Arial, sans-serif; color: #333;'>" +
+                        "<p>Hi <b>%s</b>,</p>" +
+                        "<p>You need to verify your OTP to get access to StudyBot with integration of Groq.</p>" +
+                        "<p>Your OTP is:</p>" +
+                        "<h2 style='color: #007bff; font-weight: bold; letter-spacing: 2px;'>%s</h2>" +
+                        "<br><hr style='border:none; border-top:1px solid #eee;' />" +
+                        "<h1 style='color: #2c3e50; font-size: 30px; margin-top: 10px;'>Bot-Api</h1>" +
+                        "</body></html>", user.getUsername(), user.getVerificationOtp()
+        ));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("api-key", brevoApiKey);
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            // 'true' indicates this is a multipart message (HTML compatible)
-            MimeMessageHelper helper = new MimeMessageHelper(message, true);
-
-            helper.setTo(user.getEmail());
-            helper.setSubject("StudyBot OTP Verification");
-
-            String htmlContent = String.format(
-                    "<html>" +
-                            "<body style='font-family: Arial, sans-serif; color: #333;'>" +
-                            "  <p>Hi <b>%s</b>,</p>" +
-                            "  <p>You need to verify your OTP to get access to StudyBot with integration of Groq.</p>" +
-                            "  <p>Your OTP is:</p>" +
-                            "  <h2 style='color: #007bff; font-weight: bold; letter-spacing: 2px;'>%s</h2>" + // Blue OTP
-                            "  <br>" +
-                            "  <hr style='border:none; border-top:1px solid #eee;' />" +
-                            "  <h1 style='color: #2c3e50; font-size: 30px; margin-top: 10px;'>Bot-Api</h1>" + // Large Footer
-                            "</body>" +
-                            "</html>",
-                    user.getUsername(),
-                    user.getVerificationOtp()
-            );
-
-            // Set content to HTML
-            helper.setText(htmlContent, true);
-
-            mailSender.send(message);
-
-        } catch (MessagingException e) {
-            // Log the error or handle it as needed
-            throw new RuntimeException("Failed to send OTP email", e);
+            restTemplate.postForEntity(url, request, String.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send OTP email via Brevo API", e);
         }
     }
 
