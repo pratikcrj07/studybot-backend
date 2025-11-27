@@ -21,7 +21,19 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+                                    FilterChain filterChain)
+            throws ServletException, IOException {
+
+        String path = request.getRequestURI();
+
+        // Allow public routes WITHOUT checking JWT
+        if (path.startsWith("/api/users/register") ||
+                path.startsWith("/api/users/login") ||
+                path.startsWith("/api/users/verify-otp")) {
+
+            filterChain.doFilter(request, response);
+            return; // STOP FILTERING
+        }
 
         String authHeader = request.getHeader("Authorization");
         String token = null;
@@ -29,13 +41,20 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
-            email = jwtUtil.extractEmail(token);
+            try {
+                email = jwtUtil.extractEmail(token);
+            } catch (Exception e) {
+                // Let request proceed without authentication
+                filterChain.doFilter(request, response);
+                return;
+            }
         }
 
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             if (jwtUtil.validateToken(token, email)) {
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(email, null, null);
+
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
