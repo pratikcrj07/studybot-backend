@@ -22,6 +22,12 @@ public class UserService {
     @Value("${BREVO_API_KEY}")
     private String brevoApiKey;
 
+    @Value("${BREVO_SENDER_EMAIL}")
+    private String brevoSenderEmail;
+
+    @Value("${BREVO_SENDER_NAME}")
+    private String brevoSenderName;
+
     public UserService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        JwtUtil jwtUtil,
@@ -44,7 +50,7 @@ public class UserService {
 
         User savedUser = userRepository.save(user);
 
-        // Send OTP using Brevo API
+        // Send OTP via Brevo API
         sendOtpEmail(savedUser);
 
         return savedUser;
@@ -58,13 +64,13 @@ public class UserService {
         String url = "https://api.brevo.com/v3/smtp/email";
 
         Map<String, Object> body = new HashMap<>();
-        body.put("sender", Map.of("name", "Studybot", "email", "your@brevo.com"));
-        body.put("to", List.of(Map.of("email", user.getEmail())));
+        body.put("sender", Map.of("name", brevoSenderName, "email", brevoSenderEmail));
+        body.put("to", List.of(Map.of("email", user.getEmail(), "name", user.getUsername())));
         body.put("subject", "StudyBot OTP Verification");
         body.put("htmlContent", String.format(
                 "<html><body style='font-family: Arial, sans-serif; color: #333;'>" +
                         "<p>Hi <b>%s</b>,</p>" +
-                        "<p>You need to verify your OTP to get access to StudyBot with integration of Groq.</p>" +
+                        "<p>You need to verify your OTP to get access to StudyBot.</p>" +
                         "<p>Your OTP is:</p>" +
                         "<h2 style='color: #007bff; font-weight: bold; letter-spacing: 2px;'>%s</h2>" +
                         "<br><hr style='border:none; border-top:1px solid #eee;' />" +
