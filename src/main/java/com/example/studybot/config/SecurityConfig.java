@@ -31,30 +31,28 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration config = new CorsConfiguration();
                     config.setAllowedOrigins(Arrays.asList(
-                            "http://localhost:4200", // local Angular
-                            "https://studybot-frontend.vercel.app", // production Angular
-                            "https://studybot-frontend-pratiks-projects-3cf0e3a8.vercel.app", // production alternative
-                            "https://studybot-backend-production.up.railway.app" // backend URL (if needed)
+                            "http://localhost:4200",
+                            "https://studybot-frontend.vercel.app",
+                            "https://studybot-frontend-pratiks-projects-3cf0e3a8.vercel.app"
                     ));
                     config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     config.setAllowedHeaders(Arrays.asList("*"));
-                    config.setAllowCredentials(true);
+                    config.setAllowCredentials(true); // important for cookies/auth headers
                     return config;
                 }))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/**").permitAll() // public endpoints
-                        .anyRequest().authenticated() // everything else requires auth
+                        .requestMatchers("/api/users/**").permitAll() // public endpoints like register/login
+                        .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 );
 
-        // JWT filter for token authentication
+        // Ensure JWT filter skips public endpoints
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -65,7 +63,6 @@ public class SecurityConfig {
     public RestTemplate restTemplate() {
         return new RestTemplate();
     }
-
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
