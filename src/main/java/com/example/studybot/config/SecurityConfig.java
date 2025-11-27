@@ -29,7 +29,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration config = new CorsConfiguration();
                     config.setAllowedOrigins(Arrays.asList(
-                            "http://localhost:4200",
+                            "http://localhost:4200","https://studybot-frontend.vercel.app",
                             "https://studybot-frontend-production.up.railway.app",
                             "https://studybot-backend-production.up.railway.app"
                     ));
