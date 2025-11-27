@@ -41,9 +41,10 @@ public class SecurityConfig {
                     return config;
                 }))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/**").permitAll() // public endpoints like register/login
+                        .requestMatchers("/api/users/**", "/login", "/register").permitAll()
                         .anyRequest().authenticated()
                 )
+
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 );
