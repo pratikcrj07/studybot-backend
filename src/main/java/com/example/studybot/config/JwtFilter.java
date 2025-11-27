@@ -26,13 +26,13 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        // Allow public routes WITHOUT checking JWT
+
         if (path.startsWith("/api/users/register") ||
                 path.startsWith("/api/users/login") ||
                 path.startsWith("/api/users/verify-otp")) {
 
             filterChain.doFilter(request, response);
-            return; // STOP FILTERING
+            return;
         }
 
         String authHeader = request.getHeader("Authorization");
