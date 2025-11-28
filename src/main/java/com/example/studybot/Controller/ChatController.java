@@ -1,4 +1,3 @@
-
 package com.example.studybot.Controller;
 
 import com.example.studybot.Service.GroqChatService;
@@ -21,8 +20,10 @@ public class ChatController {
         this.userService = userService;
     }
 
+    // Lightweight request object
     public static class ChatRequest {
         private String message;
+
         public String getMessage() { return message; }
         public void setMessage(String message) { this.message = message; }
     }
@@ -31,9 +32,14 @@ public class ChatController {
     public ResponseEntity<?> sendMessage(@RequestHeader("Authorization") String authHeader,
                                          @RequestBody ChatRequest chatRequest) {
         try {
+            // Extract minimal info from token
             String token = authHeader.substring(7);
             String email = userService.getEmailFromToken(token);
-            ChatMessage botResponse = groqChatService.sendMessage(email, chatRequest.getMessage());
+
+            // Pass minimal info to service (third param could be optional or default)
+            String defaultContext = ""; // or pass something meaningful if needed
+            ChatMessage botResponse = groqChatService.sendMessage(email, chatRequest.getMessage(), defaultContext);
+
             return ResponseEntity.ok(botResponse);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
@@ -45,7 +51,10 @@ public class ChatController {
         try {
             String token = authHeader.substring(7);
             String email = userService.getEmailFromToken(token);
+
+            // Return only essential chat info to reduce token size
             List<ChatMessage> history = groqChatService.getChatHistory(email);
+
             return ResponseEntity.ok(history);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
