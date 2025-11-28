@@ -8,12 +8,13 @@ src/main/resources/application-prod.properties
 
 /src/main/resources/application.properties.template
 /bot.env        -> local, DO NOT commit
+/dep.env        -> local, DO NOT commit
 /application.properties.template -> commit, safe
 /application.prod.properties -> ignore
 /application.properties -> generated via placeholders from bot.env, ignore
 # .gitignore
 bot.env
-
+dep.env
 ### STS ###
 .apt_generated
 .classpath
