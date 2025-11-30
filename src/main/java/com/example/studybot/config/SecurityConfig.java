@@ -42,7 +42,7 @@ public class SecurityConfig {
                 }))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/users/**", "/login", "/register").permitAll()
-                        .anyRequest().authenticated(
+                        .anyRequest().authenticated()
                 )
 
                 .sessionManagement(session -> session
