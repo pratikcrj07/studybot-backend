@@ -37,12 +37,12 @@ public class SecurityConfig {
                     ));
                     config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     config.setAllowedHeaders(Arrays.asList("*"));
-                    config.setAllowCredentials(true); // important for cookies/auth headers
+                    config.setAllowCredentials(true);
                     return config;
                 }))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/users/**", "/login", "/register").permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().authenticated(
                 )
 
                 .sessionManagement(session -> session
